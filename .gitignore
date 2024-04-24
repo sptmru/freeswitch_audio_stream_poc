@@ -11,6 +11,9 @@ $RECYCLE.BIN
 # Logs
 *.log
 
+# Pyenv
+.python-version
+
 # Environments
 .env
 ```
