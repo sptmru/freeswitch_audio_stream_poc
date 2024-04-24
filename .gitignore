@@ -1,0 +1,16 @@
+# General
+.DS_Store
+Thumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN
+*~
+.directory
+.Trash-*
+.nfs*
+
+# Logs
+*.log
+
+# Environments
+.env
+```
