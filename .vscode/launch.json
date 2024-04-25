@@ -9,8 +9,6 @@
           "console": "integratedTerminal",
           "stopOnEntry": false,
           "cwd": "${workspaceFolder}",
-          "env": {},
-          "envFile": "${workspaceFolder}/.env",
           "args": []
       }
   ]
