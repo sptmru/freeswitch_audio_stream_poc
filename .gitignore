@@ -16,4 +16,12 @@ $RECYCLE.BIN
 
 # Environments
 .env
-```
+
+# Thumbnail cache files
+._*
+Thumbs.db
+
+# IDE files
+.vscode/*
+!.vscode/launch.json
+.idea
