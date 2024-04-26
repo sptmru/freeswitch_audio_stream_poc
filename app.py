@@ -2,6 +2,7 @@
 
 import logging
 import sys
+import json
 from ESL import ESLconnection
 from dotenv import dotenv_values
 
@@ -27,7 +28,7 @@ log_console_handler.setFormatter(logging.Formatter(
     '%(asctime)s - %(levelname)s - %(message)s'))
 logger.addHandler(log_console_handler)
 
-if config.get('LOG_TO_FILE', 'False'):
+if config.get('LOG_TO_FILE', 'True'):
     log_file = config.get('LOG_FILE', 'fs_esl.log')
     log_file_handler = logging.FileHandler(log_file)
     log_file_handler.setLevel(log_level)
@@ -72,7 +73,7 @@ def originate_call(esl_connection, extension):
         str or None: The UUID of the call if successfully originated, otherwise None.
     """
     response = esl_connection.api(
-        "originate", f"user/{extension} &echo() async")
+        "originate", f"user/{extension} &park() async")
     if response:
         # uuid = response.getBody().decode().split(' ')[1]
         uuid = response.getBody().split()[1]
@@ -102,6 +103,23 @@ def connect_channel_with_ws_endpoint(esl_conn, uuid, ws_endpoint):
     esl_conn.api(command)
 
 
+def log_recognition_result(event):
+    """
+    Parses recognition result from FreeSWITCH event and logs it.
+
+    Returns:
+        None
+    """
+    if event.getType() == 'CUSTOM':
+        try:
+            result = json.loads(event.getBody())
+            if len(result['partial']) > 0:
+                logger.info("Partial recognition result: %s",
+                            result['partial'])
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+
 def main():
     """
     Main function
@@ -113,6 +131,12 @@ def main():
 
     uuid = originate_call(esl_conn, config.get('SIP_EXTENSION'))
     connect_channel_with_ws_endpoint(esl_conn, uuid, config.get('WS_ENDPOINT'))
+
+    esl_conn.events("plain", "ALL")
+    while True:
+        event = esl_conn.recvEvent()
+        if event:
+            log_recognition_result(event)
 
 
 if __name__ == "__main__":
