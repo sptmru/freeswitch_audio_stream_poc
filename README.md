@@ -17,3 +17,7 @@ You'll also need to install Python dependencies: `pip install -r requirements.tx
 After that, create `.env` file (you can use `.env.example` as an example) and update parameters you want to change. You would definitely want to update `SIP_EXTENSION` to your SIP extension number, `WS_ENDPOINT` to your WebSocket endpoint (Vosk endpoint is `ws://localhost:2700` if you run it locally with Docker Compose), and, of course, FreeSWITCH ESL credentials (`FS_HOST`, `FS_ESL_PORT`, `FS_ESL_PASSWORD`).
 
 That's it — now you can run the script: `python app.py`.
+
+## Speech recognition
+
+If you're using Vosk Websocket server as the WS endpoint and have logging enabled, you'll see speech recognition results in your log.
