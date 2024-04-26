@@ -98,7 +98,7 @@ def connect_channel_with_ws_endpoint(esl_conn, uuid, ws_endpoint):
     Returns:
         None
     """
-    command = f'uuid_audio_stream {uuid} start {ws_endpoint} stereo 8k'
+    command = f'uuid_audio_stream {uuid} start {ws_endpoint} mono 8k'
     esl_conn.api(command)
 
 
