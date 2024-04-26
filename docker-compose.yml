@@ -1,0 +1,6 @@
+services:
+  vosk-server:
+    image: alphacep/kaldi-en:latest
+    restart: unless-stopped
+    ports:
+      - "2700:2700"
