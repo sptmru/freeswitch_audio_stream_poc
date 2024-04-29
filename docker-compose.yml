@@ -12,4 +12,9 @@ services:
     environment:
       - FS_HOST=freeswitch
       - WS_ENDPOINT=ws://vosk-server:2700
+  freeswitch:
+    build:
+      context: ./freeswitch
+      dockerfile: Dockerfile
+    restart: unless-stopped
 
