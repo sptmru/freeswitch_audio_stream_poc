@@ -2,5 +2,14 @@ services:
   vosk-server:
     image: alphacep/kaldi-en:latest
     restart: unless-stopped
-    ports:
-      - "2700:2700"
+    expose:
+      - 2700
+  esl-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - FS_HOST=freeswitch
+      - WS_ENDPOINT=ws://vosk-server:2700
+
