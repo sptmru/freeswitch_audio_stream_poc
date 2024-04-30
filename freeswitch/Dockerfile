@@ -36,9 +36,18 @@ RUN cd /usr/local/src \
   && cd mod_audio_stream \
   && git submodule update --init --recursive \
   && mkdir build && cd build \
+  && export PKG_CONFIG_PATH=/usr/local/freeswitch/lib/pkgconfig \
   && cmake -DCMAKE_BUILD_TYPE=Release .. \
   && make && make install
 
 RUN sed -i '/<load module="mod_logfile"\/>/a \    <load module="mod_audio_stream"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
+RUN sed -i '/<load module="mod_signalwire"\/>/a \    <load module="mod_avmd"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
+RUN sed -i 's|<param name="listen-ip" value="::"/>|<param name="listen-ip" value="0.0.0.0"/>|g' /usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
 
-CMD ["/usr/local/freeswitch/bin/freeswitch"]
+EXPOSE 5060 5060/udp 8021
+RUN ln -s /usr/local/freeswitch/bin/fs_cli /usr/local/bin/fs_cli
+
+COPY entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["entrypoint.sh"]
