@@ -75,7 +75,6 @@ def originate_call(esl_connection, extension):
     response = esl_connection.api(
         "originate", f"user/{extension} &park() async")
     if response:
-        # uuid = response.getBody().decode().split(' ')[1]
         uuid = response.getBody().split()[1]
         return uuid
 
