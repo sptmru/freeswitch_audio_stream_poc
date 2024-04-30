@@ -2,9 +2,6 @@ FROM python:3.11-alpine
 
 WORKDIR /usr/src/app
 
-COPY . .
-COPY .env.example .env
-
 RUN apk update \ 
   && apk add build-base unzip wget automake autoconf libtool pcre-dev bison
 
@@ -21,9 +18,10 @@ RUN cd /usr/src \
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# CMD ["python", "app.py"]
-
 COPY entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
+
+COPY . .
+COPY .env.example .env
 
 ENTRYPOINT ["entrypoint.sh"]
