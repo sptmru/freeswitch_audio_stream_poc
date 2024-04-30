@@ -43,6 +43,8 @@ RUN cd /usr/local/src \
 RUN sed -i '/<load module="mod_logfile"\/>/a \    <load module="mod_audio_stream"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
 RUN sed -i '/<load module="mod_signalwire"\/>/a \    <load module="mod_avmd"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
 RUN sed -i 's|<param name="listen-ip" value="::"/>|<param name="listen-ip" value="0.0.0.0"/>|g' /usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
+RUN sed -i 's|<!--<param name="apply-inbound-acl" value="loopback.auto"/>-->|<param name="apply-inbound-acl" value="lan"/>|' /usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
+RUN sed -i '/<list name="lan" default="allow">/,/<\/list>/c\<list name="lan" default="allow">\n      <node type="allow" cidr="0.0.0.0/0"/>\n<\/list>' /usr/local/freeswitch/conf/autoload_configs/acl.conf.xml
 
 EXPOSE 5060 5060/udp 8021
 RUN ln -s /usr/local/freeswitch/bin/fs_cli /usr/local/bin/fs_cli
