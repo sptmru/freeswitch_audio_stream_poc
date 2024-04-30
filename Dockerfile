@@ -16,6 +16,7 @@ RUN cd /usr/src \
   && cd /usr/src/app \
   && rm -rf /usr/src/swig-3.0.12 /usr/src/v3.0.12.zip
 
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY entrypoint.sh /usr/local/bin/
