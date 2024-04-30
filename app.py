@@ -39,6 +39,32 @@ if config.get('LOG_TO_FILE', 'True'):
     logger.addHandler(log_file_handler)
 
 
+def esl_event_handler(event, conn):
+    """
+    Handle incoming FreeSWITCH ESL events.
+    """
+    event_name = event.getHeader("Event-Name")
+
+    if event and event_name == "CHANNEL_PARK":
+        uuid = event.getHeader("Unique-ID")
+        logger.info("Call %s started", uuid)
+        conn.api("uuid_answer", uuid)
+
+    if event and event_name == "CHANNEL_ANSWER":
+        uuid = event.getHeader("Unique-ID")
+        logger.info("Call %s answered", uuid)
+        connect_channel_with_ws_endpoint(
+            conn, uuid, config.get('WS_ENDPOINT'))
+        logger.info("Connected call %s to WS endpoint", uuid)
+
+    if event and event_name == 'CUSTOM':
+        log_recognition_result(event)
+
+    if event and event_name == "CHANNEL_HANGUP":
+        uuid = event.getHeader("Unique-ID")
+        logger.info("Call %s ended", uuid)
+
+
 def handle_esl_connection(client_socket, address):
     """
     Handle incoming ESL connection.
@@ -49,26 +75,7 @@ def handle_esl_connection(client_socket, address):
     conn.events("plain", "ALL")
     while True:
         event = conn.recvEvent()
-        event_name = event.getHeader("Event-Name")
-
-        if event and event_name == "CHANNEL_PARK":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s started", uuid)
-            conn.api("uuid_answer", uuid)
-
-        if event and event_name == "CHANNEL_ANSWER":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s answered", uuid)
-            connect_channel_with_ws_endpoint(
-                conn, uuid, config.get('WS_ENDPOINT'))
-            logger.info("Connected call %s to WS endpoint", uuid)
-
-        if event and event_name == 'CUSTOM':
-            log_recognition_result(event)
-
-        if event and event_name == "CHANNEL_HANGUP":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s ended", uuid)
+        esl_event_handler(event, conn)
 
 
 def start_esl_server(host, port):
