@@ -12,6 +12,9 @@ services:
     environment:
       - FS_HOST=freeswitch
       - WS_ENDPOINT=ws://vosk-server:2700
+    depends_on:
+      - vosk-server
+      - freeswitch
   freeswitch:
     build:
       context: ./freeswitch
