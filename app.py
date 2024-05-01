@@ -43,26 +43,33 @@ def esl_event_handler(event, conn):
     """
     Handle incoming FreeSWITCH ESL events.
     """
+    if not event:
+        return
+
     event_name = event.getHeader("Event-Name")
-
-    if event and event_name == "CHANNEL_PARK":
-        uuid = event.getHeader("Unique-ID")
-        logger.info("Call %s started", uuid)
-        conn.api("uuid_answer", uuid)
-
-    if event and event_name == "CHANNEL_ANSWER":
-        uuid = event.getHeader("Unique-ID")
-        logger.info("Call %s answered", uuid)
-        connect_channel_with_ws_endpoint(
-            conn, uuid, config.get('WS_ENDPOINT'))
-        logger.info("Connected call %s to WS endpoint", uuid)
-
-    if event and event_name == 'CUSTOM':
-        log_recognition_result(event)
-
-    if event and event_name == "CHANNEL_HANGUP":
-        uuid = event.getHeader("Unique-ID")
-        logger.info("Call %s ended", uuid)
+    match event_name:
+        case "CHANNEL_PARK":
+            uuid = event.getHeader("Unique-ID")
+            logger.info("Call %s started", uuid)
+            conn.api("uuid_answer", uuid)
+        case "CHANNEL_ANSWER":
+            uuid = event.getHeader("Unique-ID")
+            logger.info("Call %s answered", uuid)
+            connect_channel_with_ws_endpoint(
+                conn, uuid, config.get('WS_ENDPOINT'))
+            logger.info("Connected call %s to WS endpoint", uuid)
+        case "CUSTOM":
+            log_recognition_result(event)
+        case "CHANNEL_HANGUP":
+            uuid = event.getHeader("Unique-ID")
+            logger.info("Call %s ended", uuid)
+        case "HEARTBEAT":
+            logger.info("Received heartbeat: %s", event.getBody())
+        case "RE_SCHEDULE":
+            logger.info("Received reschedule: %s", event.getBody())
+        case _:
+            if event_name != "SERVER_DISCONNECTED":
+                logger.info("Received event: %s", event_name)
 
 
 def handle_esl_connection(client_socket, address):
@@ -72,10 +79,12 @@ def handle_esl_connection(client_socket, address):
     logger.info("Got ESL inbound connection at %s", address)
     conn = ESLconnection(client_socket.fileno())
 
-    conn.events("plain", "ALL")
-    while True:
-        event = conn.recvEvent()
-        esl_event_handler(event, conn)
+    if conn.connected():
+        logger.info("Connection info: %s", conn.getInfo().getBody())
+        conn.events("plain", "ALL")
+        while True:
+            event = conn.recvEvent()
+            esl_event_handler(event, conn)
 
 
 def start_esl_server(host, port):
