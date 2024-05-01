@@ -25,8 +25,7 @@ services:
     ports:
       - "5060:5060"
       - "5060:5060/udp"
-    expose:
-      - 8021
+      - "8021:8021"
     environment:
       - EXTENSION_PASSWORD=extensionpassword
       - ESL_APP_HOST=esl-app
