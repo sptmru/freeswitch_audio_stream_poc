@@ -9,6 +9,6 @@ sed -i "s|LOG_LEVEL=info|LOG_LEVEL=${LOG_LEVEL:-info}|" .env
 sed -i "s|LOG_TO_FILE=false|LOG_TO_FILE=${LOG_TO_FILE:-false}|" .env
 sed -i "s|LOG_FILE=fs_esl.log|LOG_FILE=${LOG_FILE:-fs_esl.log}|" .env
 sed -i "s|WS_ENDPOINT=ws://localhost:2700|WS_ENDPOINT=${WS_ENDPOINT:-ws://localhost:2700}|" .env
-sed -i "s|SIP_EXTENSION=1000|SIP_EXTENSION=${SIP_EXTENSION:-1000}|" .env
+sed -i "s|NUMBER_TO_DIAL==99999|NUMBER_TO_DIAL=${NUMBER_TO_DIAL:-99999}|" .env
 
 python app.py
