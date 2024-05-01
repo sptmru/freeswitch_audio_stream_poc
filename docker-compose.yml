@@ -12,7 +12,6 @@ services:
     environment:
       - FS_HOST=freeswitch
       - WS_ENDPOINT=ws://vosk-server:2700
-      - ESL_INBOUND_PORT=8022
       - NUMBER_TO_DIAL=99999
     depends_on:
       - vosk-server
@@ -28,7 +27,5 @@ services:
       - "8021:8021"
     environment:
       - EXTENSION_PASSWORD=extensionpassword
-      - ESL_APP_HOST=esl-app
-      - ESL_APP_PORT=8022
       - NUMBER_TO_DIAL=99999
 
