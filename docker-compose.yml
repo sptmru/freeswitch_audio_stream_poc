@@ -1,6 +1,8 @@
 services:
   vosk-server:
     image: alphacep/kaldi-en:latest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     expose:
       - 2700
@@ -9,8 +11,10 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      - FS_HOST=freeswitch
+      - FS_HOST=host.docker.internal
       - WS_ENDPOINT=ws://vosk-server:2700
       - NUMBER_TO_DIAL=99999
     depends_on:
@@ -21,11 +25,7 @@ services:
       context: ./freeswitch
       dockerfile: Dockerfile
     restart: unless-stopped
-    ports:
-      - "5060:5060"
-      - "5060:5060/udp"
-      - "8021:8021"
-      - "10000-10010:10000-10010/udp"
+    network_mode: "host"
     environment:
       - EXTENSION_PASSWORD=extensionpassword
       - NUMBER_TO_DIAL=99999
