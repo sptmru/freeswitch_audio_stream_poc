@@ -120,11 +120,8 @@ def esl_event_handler(event, conn):
                     conn, uuid, config.get('WS_ENDPOINT'))
                 logger.info("Connected call %s to WS endpoint", uuid)
         case "CUSTOM":
-            logger.info("Custom event data: %s", event.serialize('json'))
-            log_recognition_result(event)
-        case "CHANNEL_HANGUP":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s ended", uuid)
+            if event.getHeader("Event-Subclass") == "mod_audio_stream::json":
+                log_recognition_result(event)
         case _:
             if event_name != "SERVER_DISCONNECTED":
                 logger.debug("Received event: %s", event_name)
