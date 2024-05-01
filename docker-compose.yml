@@ -25,6 +25,7 @@ services:
       - "5060:5060"
       - "5060:5060/udp"
       - "8021:8021"
+      - "10000-10010:10000-10010/udp"
     environment:
       - EXTENSION_PASSWORD=extensionpassword
       - NUMBER_TO_DIAL=99999
