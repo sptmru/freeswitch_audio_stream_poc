@@ -120,7 +120,7 @@ def esl_event_handler(event, conn):
                     conn, uuid, config.get('WS_ENDPOINT'))
                 logger.info("Connected call %s to WS endpoint", uuid)
         case "CUSTOM":
-            logger.ingfo("Custom event data: %s", event.serialize('json'))
+            logger.info("Custom event data: %s", event.serialize('json'))
             log_recognition_result(event)
         case "CHANNEL_HANGUP":
             uuid = event.getHeader("Unique-ID")
