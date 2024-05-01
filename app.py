@@ -3,8 +3,6 @@
 import logging
 import sys
 import json
-import socket
-import threading
 from ESL import ESLconnection
 from dotenv import dotenv_values
 
@@ -39,70 +37,6 @@ if config.get('LOG_TO_FILE', 'True'):
     logger.addHandler(log_file_handler)
 
 
-def esl_event_handler(event, conn):
-    """
-    Handle incoming FreeSWITCH ESL events.
-    """
-    if not event:
-        return
-
-    event_name = event.getHeader("Event-Name")
-    match event_name:
-        case "CHANNEL_PARK":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s started", uuid)
-            conn.api("uuid_answer", uuid)
-        case "CHANNEL_ANSWER":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s answered", uuid)
-            connect_channel_with_ws_endpoint(
-                conn, uuid, config.get('WS_ENDPOINT'))
-            logger.info("Connected call %s to WS endpoint", uuid)
-        case "CUSTOM":
-            log_recognition_result(event)
-        case "CHANNEL_HANGUP":
-            uuid = event.getHeader("Unique-ID")
-            logger.info("Call %s ended", uuid)
-        case "HEARTBEAT":
-            logger.info("Received heartbeat: %s", event.getBody())
-        case "RE_SCHEDULE":
-            logger.info("Received reschedule: %s", event.getBody())
-        case _:
-            if event_name != "SERVER_DISCONNECTED":
-                logger.info("Received event: %s", event_name)
-
-
-def handle_esl_connection(client_socket, address):
-    """
-    Handle incoming ESL connection.
-    """
-    logger.info("Got ESL inbound connection at %s", address)
-    conn = ESLconnection(client_socket.fileno())
-
-    if conn.connected():
-        logger.info("Connection info: %s", conn.getInfo().getBody())
-        conn.events("plain", "ALL")
-        while True:
-            event = conn.recvEvent()
-            esl_event_handler(event, conn)
-
-
-def start_esl_server(host, port):
-    """
-    Start ESL server to listen for incoming connections from FreeSWITCH.
-    """
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
-        server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind((host, port))
-        server_socket.listen()
-        logger.info("ESL server listening on %s:%s", host, port)
-        while True:
-            client_socket, addr = server_socket.accept()
-            thread = threading.Thread(
-                target=handle_esl_connection, args=(client_socket, addr))
-            thread.start()
-
-
 def connect_to_freeswitch():
     """
     Connects to a FreeSWITCH server using ESL (Event Socket Library).
@@ -124,28 +58,22 @@ def connect_to_freeswitch():
     return None
 
 
-def originate_call(esl_connection, extension):
+def log_recognition_result(event):
     """
-    Initiates an outbound call from FreeSWITCH to a specified extension.
-
-    This method uses an existing ESLconnection object to originate an outbound
-    call to the specified extension on the FreeSWITCH server.
-
-    Args:
-        esl_connection (ESLconnection): An existing connection object to the FreeSWITCH server.
-        extension (str): The extension number to call.
+    Parses recognition result from FreeSWITCH event and logs it.
 
     Returns:
-        str or None: The UUID of the call if successfully originated, otherwise None.
+        None
     """
-    response = esl_connection.api(
-        "originate", f"user/{extension} &park() async")
-    if response:
-        uuid = response.getBody().split()[1]
-        return uuid
-
-    logger.error('Could not originate call')
-    return None
+    if not event or event.getBody() is None:
+        return
+    try:
+        result = json.loads(event.getBody())
+        if len(result['partial']) > 0:
+            logger.info("Partial recognition result: %s",
+                        result['partial'])
+    except (json.JSONDecodeError, KeyError):
+        pass
 
 
 def connect_channel_with_ws_endpoint(esl_conn, uuid, ws_endpoint):
@@ -168,22 +96,38 @@ def connect_channel_with_ws_endpoint(esl_conn, uuid, ws_endpoint):
     esl_conn.api(command)
 
 
-def log_recognition_result(event):
+def esl_event_handler(event, conn):
     """
-    Parses recognition result from FreeSWITCH event and logs it.
-
-    Returns:
-        None
+    Handle FreeSWITCH ESL events.
     """
     if not event:
         return
-    try:
-        result = json.loads(event.getBody())
-        if len(result['partial']) > 0:
-            logger.info("Partial recognition result: %s",
-                        result['partial'])
-    except (json.JSONDecodeError, KeyError):
-        pass
+
+    event_name = event.getHeader("Event-Name")
+    match event_name:
+        case "CHANNEL_PARK":
+            destination_number = event.getHeader("Caller-Destination-Number")
+            if destination_number == config.get('NUMBER_TO_DIAL'):
+                uuid = event.getHeader("Unique-ID")
+                logger.info("Call %s started", uuid)
+                conn.api("uuid_answer", uuid)
+        case "CHANNEL_ANSWER":
+            uuid = event.getHeader("Unique-ID")
+            destination_number = event.getHeader("Caller-Destination-Number")
+            if destination_number == config.get('NUMBER_TO_DIAL'):
+                logger.info("Call %s answered", uuid)
+                connect_channel_with_ws_endpoint(
+                    conn, uuid, config.get('WS_ENDPOINT'))
+                logger.info("Connected call %s to WS endpoint", uuid)
+        case "CUSTOM":
+            logger.ingfo("Custom event data: %s", event.serialize('json'))
+            log_recognition_result(event)
+        case "CHANNEL_HANGUP":
+            uuid = event.getHeader("Unique-ID")
+            logger.info("Call %s ended", uuid)
+        case _:
+            if event_name != "SERVER_DISCONNECTED":
+                logger.debug("Received event: %s", event_name)
 
 
 def main():
@@ -195,13 +139,10 @@ def main():
         logger.error('Exiting...')
         sys.exit(1)
 
-    esl_inbound_host = config.get('ESL_INBOUND_HOST', '0.0.0.0')
-    esl_inbound_port = int(config.get('ESL_INBOUND_PORT', '8022'))
-
-    start_esl_server(esl_inbound_host, esl_inbound_port)
-
-    # uuid = originate_call(esl_conn, config.get('SIP_EXTENSION'))
-    # connect_channel_with_ws_endpoint(esl_conn, uuid, config.get('WS_ENDPOINT'))
+    esl_conn.events("plain", "ALL")
+    while True:
+        event = esl_conn.recvEvent()
+        esl_event_handler(event, esl_conn)
 
 
 if __name__ == "__main__":
