@@ -2,17 +2,15 @@
 
 sed -i '/<X-PRE-PROCESS cmd="set" data="default_password=[^"]*"\/>/c\<X-PRE-PROCESS cmd="set" data="default_password='"${EXTENSION_PASSWORD:-extensionpassword}"'"\/>' /usr/local/freeswitch/conf/vars.xml
 
-ESL_APP_HOST="${ESL_APP_HOST:-esl-app}"
-ESL_APP_PORT="${ESL_APP_PORT:-8022}"
 NUMBER_TO_DIAL="${NUMBER_TO_DIAL:-99999}"
 
-awk -v host="$ESL_APP_HOST" -v port="$ESL_APP_PORT" -v numbertodial="$NUMBER_TO_DIAL" '
+awk -v numbertodial="$NUMBER_TO_DIAL" '
 /<context name="default">/ {
     print
     print ""
-    print "<extension name=\"esl_inbound\">"
+    print "<extension name=\"esl_park\">"
     print "  <condition field=\"destination_number\" expression=\"^"numbertodial"$\">"
-    print "    <action application=\"socket\" data=\"" host ":" port " async full\"/>"
+    print "    <action application=\"park\"\"/>"
     print "  </condition>"
     print "</extension>"
     next
