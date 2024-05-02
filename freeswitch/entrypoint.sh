@@ -18,4 +18,6 @@ awk -v numbertodial="$NUMBER_TO_DIAL" '
 { print }
 ' /usr/local/freeswitch/conf/dialplan/default.xml > /tmp/default.xml && mv /tmp/default.xml /usr/local/freeswitch/conf/dialplan/default.xml
 
+echo "127.0.0.1 vosk-server" | tee -a /etc/hosts > /dev/null
+
 /usr/local/freeswitch/bin/freeswitch -nonat -nf -nc
