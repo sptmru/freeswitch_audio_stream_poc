@@ -32,8 +32,8 @@ RUN cd /usr/local/src/freeswitch \
   && make && make install && make cd-sounds-install cd-moh-install
 
 RUN cd /usr/local/src \
-  && git clone https://github.com/amigniter/mod_audio_stream \
-  && cd mod_audio_stream \
+  && git clone https://github.com/sptmru/freeswitch_mod_audio_stream \
+  && cd freeswitch_mod_audio_stream \
   && git submodule update --init --recursive \
   && mkdir build && cd build \
   && export PKG_CONFIG_PATH=/usr/local/freeswitch/lib/pkgconfig \
