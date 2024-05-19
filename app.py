@@ -76,23 +76,23 @@ def log_recognition_result(event):
         pass
 
 
-def connect_channel_with_ws_endpoint(esl_conn, uuid, ws_endpoint):
+def connect_channel_with_endpoint(esl_conn, uuid, endpoint):
     """
-    Connects a channel to a WebSocket (WS) endpoint for audio streaming.
+    Connects a channel to a WebSocket (WS) or TCP endpoint for audio streaming.
 
     This method connects a channel identified by its UUID to the specified
-    WebSocket (WS) endpoint for audio streaming. It sends a command to FreeSWITCH
+    WebSocket (WS) or TCP endpoint for audio streaming. It sends a command to FreeSWITCH
     via the provided ESLconnection object to establish the audio stream.
 
     Args:
         esl_conn (ESLconnection): An existing connection object to the FreeSWITCH server.
         uuid (str): The UUID of the channel to connect.
-        ws_endpoint (str): The WebSocket (WS) endpoint URL for audio streaming.
+        endpoint (str): The WebSocket (WS) or TCP endpoint URL for audio streaming.
 
     Returns:
         None
     """
-    command = f'uuid_audio_stream {uuid} start {ws_endpoint} mixed 8k'
+    command = f'uuid_audio_stream {uuid} start {endpoint} mixed 8k'
     esl_conn.api(command)
 
 
@@ -116,9 +116,9 @@ def esl_event_handler(event, conn):
             destination_number = event.getHeader("Caller-Destination-Number")
             if destination_number == config.get('NUMBER_TO_DIAL'):
                 logger.info("Call %s answered", uuid)
-                connect_channel_with_ws_endpoint(
-                    conn, uuid, config.get('WS_ENDPOINT'))
-                logger.info("Connected call %s to WS endpoint", uuid)
+                connect_channel_with_endpoint(
+                    conn, uuid, config.get('ENDPOINT'))
+                logger.info("Connected call %s to the endpoint", uuid)
         case "CUSTOM":
             if event.getHeader("Event-Subclass") == "mod_audio_stream::json":
                 log_recognition_result(event)
