@@ -1,4 +1,4 @@
-"""FreeSWITCH ESL app demonstrating https://github.com/amigniter/mod_audio_stream usage"""
+"""FreeSWITCH ESL app demonstrating https://github.com/sptmru/freeswitch_mod_audio_stream usage"""
 
 import logging
 import sys
