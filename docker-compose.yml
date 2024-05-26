@@ -6,6 +6,14 @@ services:
     restart: unless-stopped
     expose:
       - 2700
+  tcp-receiver:
+    build:
+      context: ./tcp-receiver
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - TCP_RECEIVER_PORT=0.0.0.0
+      - TCP_RECEIVER_PORT=6000
   esl-app:
     build:
       context: .
