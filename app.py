@@ -92,7 +92,7 @@ def connect_channel_with_endpoint(esl_conn, uuid, endpoint):
     Returns:
         None
     """
-    command = f'uuid_audio_stream {uuid} start {endpoint} mixed 8k'
+    command = f'uuid_audio_stream {uuid} start {endpoint} mono 8k'
     esl_conn.api(command)
 
 
