@@ -23,7 +23,7 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       - FS_HOST=host.docker.internal
-      - WS_ENDPOINT=ws://vosk-server:2700
+      - ENDPOINT=ws://vosk-server:2700
       - NUMBER_TO_DIAL=99999
     depends_on:
       - vosk-server
