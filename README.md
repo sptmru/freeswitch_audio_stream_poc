@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a simple Python ESL script which initiates a call to a SIP extension and bridges that to a Vosk WebSocket / TCP endpoint using [mod_audio_socket](https://github.com/sptmru/freeswitch_mod_audio_stream) (it's my updated version of this module, here's the original module: https://github.com/amigniter/mod_audio_stream).
+This is a simple Python ESL script which initiates a call to a SIP extension and bridges that to a Vosk WebSocket / TCP endpoint using [mod_audio_stream](https://github.com/sptmru/freeswitch_mod_audio_stream) (it's my updated version of this module, here's the original module: https://github.com/amigniter/mod_audio_stream).
 
 ## Usage
 
