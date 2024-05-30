@@ -1,4 +1,4 @@
-# FreeSWITCH mod_audio_socket PoC
+# FreeSWITCH mod_audio_stream PoC
 
 ## Description
 
