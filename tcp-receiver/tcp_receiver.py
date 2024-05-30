@@ -3,7 +3,9 @@
 import socket
 import sys
 import logging
+from io import BytesIO
 from dotenv import dotenv_values
+from pydub import AudioSegment
 
 log_level_mapping = {
     'DEBUG': logging.DEBUG,
@@ -35,14 +37,27 @@ if config.get('LOG_TO_FILE', 'True'):
         '%(asctime)s - %(levelname)s - %(message)s'))
     logger.addHandler(log_file_handler)
 
-
 HOST = config.get('TCP_RECEIVER_HOST', "0.0.0.0")
 PORT = int(config.get('TCP_RECEIVER_PORT', 6000))
 
 
+def analyze_audio_data(data):
+    """
+    Analyze the incoming audio data and estimate format details.
+    """
+    audio = AudioSegment.from_raw(
+        BytesIO(data), sample_width=2, frame_rate=44100, channels=1)
+
+    sample_rate = audio.frame_rate
+    bit_depth = audio.sample_width * 8
+    num_channels = audio.channels
+
+    return sample_rate, bit_depth, num_channels
+
+
 def handle_connection(conn):
     """
-    Handle incoming connection and save incoming audio data to received_audio.raw file
+    Handle incoming connection, analyze audio data, and save audio data to received_audio.raw file
     """
     with open('received_audio.raw', 'wb') as f:
         logger.info("Opened file to save received audio data")
@@ -50,6 +65,9 @@ def handle_connection(conn):
             data = conn.recv(1024)
             if not data:
                 break
+            sample_rate, bit_depth, num_channels = analyze_audio_data(data)
+            logger.info("Estimated Audio Format: Sample Rate = %d Hz, Bit Depth = %d bits, Channels = %d",
+                        sample_rate, bit_depth, num_channels)
             f.write(data)
             f.flush()
         logger.info(
