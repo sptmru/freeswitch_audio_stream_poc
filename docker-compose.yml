@@ -11,7 +11,6 @@ services:
       - ENDPOINT=wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01
       - NUMBER_TO_DIAL=99999
     depends_on:
-      - vosk-server
       - freeswitch
   freeswitch:
     build:
