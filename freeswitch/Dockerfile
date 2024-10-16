@@ -17,7 +17,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] htt
 
 RUN apt-get update \
   && apt-get build-dep -y freeswitch \
-  && apt-get install -y libcjson1 libcjson-dev \
+  && apt-get install -y libjsoncpp-dev \
   && apt-get clean 
 
 RUN cd /usr/local/src \
