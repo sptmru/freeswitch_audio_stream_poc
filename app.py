@@ -116,6 +116,17 @@ def esl_event_handler(event, conn):
             destination_number = event.getHeader("Caller-Destination-Number")
             if destination_number == config.get('NUMBER_TO_DIAL'):
                 logger.info("Call %s answered", uuid)
+
+                api_key = config.get('OPENAI_API_KEY')
+                headers = {
+                    "Authorization": f"Bearer {api_key}",
+                    "OpenAI-Beta": "realtime=v1"
+                }
+                headers_json = json.dumps(headers)
+                setvar_command = f"uuid_setvar {uuid} STREAM_EXTRA_HEADERS '{headers_json}'"
+                conn.api(setvar_command)
+                logger.debug("Setting STREAM_EXTRA_HEADERS for UUID %s: %s", uuid, headers_json)
+
                 connect_channel_with_endpoint(
                     conn, uuid, config.get('ENDPOINT'))
                 logger.info("Connected call %s to the endpoint", uuid)
