@@ -32,6 +32,8 @@ RUN cd /usr/local/src/freeswitch \
   && ./configure \
   && make && make install && make cd-sounds-install cd-moh-install
 
+RUN ln -s /usr/include/jsoncpp/json/ /usr/include/json
+
 RUN cd /usr/local/src \
   && git clone https://github.com/sptmru/freeswitch_mod_audio_stream \
   && cd freeswitch_mod_audio_stream \
