@@ -34,6 +34,7 @@ RUN cd /usr/local/src/freeswitch \
 RUN cd /usr/local/src \
   && git clone https://github.com/sptmru/freeswitch_mod_audio_stream \
   && cd freeswitch_mod_audio_stream \
+  && git checkout openai \
   && git submodule update --init --recursive \
   && mkdir build && cd build \
   && export PKG_CONFIG_PATH=/usr/local/freeswitch/lib/pkgconfig \
