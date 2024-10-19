@@ -90,9 +90,9 @@ def connect_channel_with_endpoint(esl_conn, uuid, endpoint):
         endpoint (str): The WebSocket (WS) or TCP endpoint URL for audio streaming.
 
     Returns:
-        None
+        None    
     """
-    command = f'uuid_audio_stream {uuid} start {endpoint} mono 8k'
+    command = f'uuid_audio_stream {uuid} start {endpoint} mono 16k'
     esl_conn.api(command)
 
 
@@ -126,6 +126,10 @@ def esl_event_handler(event, conn):
                 setvar_command = f"uuid_setvar {uuid} STREAM_EXTRA_HEADERS '{headers_json}'"
                 conn.api(setvar_command)
                 logger.debug("Setting STREAM_EXTRA_HEADERS for UUID %s: %s", uuid, headers_json)
+
+                deflate_setvar_command = f"uuid_setvar {uuid} STREAM_MESSAGE_DEFLATE 1"
+                conn.api(deflate_setvar_command)
+                logger.debug("Setting STREAM_MESSAGE_DEFLATE for UUID %s: 1", uuid)
 
                 connect_channel_with_endpoint(
                     conn, uuid, config.get('ENDPOINT'))
