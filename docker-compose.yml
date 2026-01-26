@@ -22,8 +22,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - FS_HOST=host.docker.internal
-      - ENDPOINT=ws://localhost:2700
+      - FS_HOST=freeswitch
+      - ENDPOINT=ws://host.docker.internal:2700
       - NUMBER_TO_DIAL=99999
     depends_on:
       - vosk-server
@@ -33,7 +33,11 @@ services:
       context: ./freeswitch
       dockerfile: Dockerfile
     restart: unless-stopped
-    network_mode: "host"
+    ports:
+      - "5060:5060/udp"
+      - "5060:5060/tcp"
+      - "8021:8021"
+      - "16384-16482:16384-16482/udp"
     environment:
       - EXTENSION_PASSWORD=extensionpassword
       - NUMBER_TO_DIAL=99999
