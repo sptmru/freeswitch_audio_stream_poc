@@ -1,23 +1,29 @@
 FROM debian:bookworm
 
-RUN apt-get update \
-  && apt-get install -y gnupg2 wget lsb-release git cmake
-
-# Download the GPG key for the repository
-RUN wget --http-user=signalwire --http-password=pat_EoSrCyJGQgW89pasdEeggfCw \
-  -O /usr/share/keyrings/signalwire-freeswitch-repo.gpg \
-  https://freeswitch.signalwire.com/repo/deb/debian-release/signalwire-freeswitch-repo.gpg
-
-# Create apt auth.conf with credentials
-RUN echo "machine freeswitch.signalwire.com login signalwire password pat_EoSrCyJGQgW89pasdEeggfCw" > /etc/apt/auth.conf
-
-# Add the SignalWire repository to sources list
-RUN echo "deb [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/freeswitch.list \
-  && echo "deb-src [signed-by=/usr/share/keyrings/signalwire-freeswitch-repo.gpg] https://freeswitch.signalwire.com/repo/deb/debian-release/ $(lsb_release -sc) main" >> /etc/apt/sources.list.d/freeswitch.list
+ARG BUILD_CPUS=1
 
 RUN apt-get update \
-  && apt-get build-dep -y freeswitch \
+  && apt-get install -y --quiet --no-install-recommends \
+    gnupg2 wget lsb-release git cmake \
+    python-is-python3 lsof gcc g++ make build-essential git autoconf automake default-mysql-client redis-tools \
+    curl telnet libtool libtool-bin libssl-dev libcurl4-openssl-dev libz-dev liblz4-tool \
+    libxtables-dev libip6tc-dev libip4tc-dev  libiptc-dev libavformat-dev liblua5.1-0-dev libavfilter-dev libavcodec-dev libswresample-dev \
+    libevent-dev libpcap-dev libxmlrpc-core-c3-dev markdown libjson-glib-dev lsb-release libpq-dev php-dev \
+    libhiredis-dev gperf libspandsp-dev default-libmysqlclient-dev htop dnsutils gdb libtcmalloc-minimal4 \
+    gnupg2 wget pkg-config ca-certificates libjpeg-dev libsqlite3-dev libpcre3-dev libldns-dev libboost-all-dev \
+    libspeex-dev libspeexdsp-dev libedit-dev libtiff-dev yasm libswscale-dev haveged libre2-dev \
+    libopus-dev libsndfile-dev libshout3-dev libmpg123-dev libmp3lame-dev libopusfile-dev libgoogle-perftools-dev \
+  # && apt-get build-dep -y freeswitch \
   && apt-get clean 
+
+RUN cd /usr/local/src \
+  && git clone https://github.com/freeswitch/spandsp.git && cd spandsp && git checkout 0d2e6ac \
+  && ./bootstrap.sh && ./configure && make -j ${BUILD_CPUS} && make install
+
+RUN cd /usr/local/src \
+  && git clone --depth 1 -b v1.13.17 https://github.com/freeswitch/sofia-sip.git \
+  && cd sofia-sip \
+  && ./bootstrap.sh && ./configure && make -j ${BUILD_CPUS} && make install
 
 RUN cd /usr/local/src \
   && git clone https://github.com/signalwire/freeswitch.git -bv1.10 freeswitch \
@@ -25,6 +31,8 @@ RUN cd /usr/local/src \
   && git config pull.rebase true
 
 COPY ./modules.conf /usr/local/src/freeswitch/modules.conf
+
+RUN ldconfig
 
 RUN cd /usr/local/src/freeswitch \
   && ./bootstrap.sh -j \
@@ -40,8 +48,8 @@ RUN cd /usr/local/src \
   && cmake -DCMAKE_BUILD_TYPE=Release .. \
   && make && make install
 
-RUN sed -i '/<load module="mod_logfile"\/>/a \    <load module="mod_audio_stream"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
-RUN sed -i '/<load module="mod_signalwire"\/>/a \    <load module="mod_avmd"/>' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
+RUN sed -i 's|<load module="mod_verto"/>|<load module="mod_audio_stream"/>|' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
+RUN sed -i 's|<load module="mod_signalwire"/>|<load module="mod_avmd"/>|' /usr/local/freeswitch/conf/autoload_configs/modules.conf.xml
 RUN sed -i 's|<param name="listen-ip" value="::"/>|<param name="listen-ip" value="0.0.0.0"/>|g' /usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
 RUN sed -i 's|<!--<param name="apply-inbound-acl" value="loopback.auto"/>-->|<param name="apply-inbound-acl" value="lan"/>|' /usr/local/freeswitch/conf/autoload_configs/event_socket.conf.xml
 RUN sed -i '/<list name="lan" default="allow">/,/<\/list>/c\<list name="lan" default="allow">\n      <node type="allow" cidr="0.0.0.0/0"/>\n<\/list>' /usr/local/freeswitch/conf/autoload_configs/acl.conf.xml
